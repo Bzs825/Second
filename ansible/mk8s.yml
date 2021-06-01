@@ -1,0 +1,49 @@
+---
+- hosts: multipass
+  become: true
+
+  tasks:
+  - name: add GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add apt repository for stable version
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+  - name: Install base dependencies (snap)
+    become: yes
+    apt:
+      name: snapd
+      state: present
+
+  - name: Install Microk8s (snap)
+    become: yes
+    snap:
+      name: microk8s
+      classic: yes
+      channel: latest/stable
+      state: present
+
+  - name: Install Kubectl (snap)
+    become: yes
+    snap:
+      name: kubectl
+      classic: yes
+      channel: latest/stable
+      
+  - name: Add ansible user to microk8s group
+    user:
+      name: ansible
+      group: microk8s
+
+  - name: Create directory for Kubeconfig
+    file:
+      path: ./.kube
+      state: directory
+
+  - name: Copy microk8s configfile
+    become: yes
+    shell: microk8s config > ./.kube/config
