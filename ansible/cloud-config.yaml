@@ -1,0 +1,20 @@
+#cloud-config
+groups:
+  - admin
+
+users:
+  - name: ansible
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: admin
+    ssh_import_id: None
+    lock_passwd: true
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYLiqRtNxI5lyWCnRLQSbx+hPF5NzrqFJ9WmRjSVI6IIHM/l+eBYbx5/54GiBqPLEwFsWrvRX+Rifi9P1F65hEjxkhdSKh9udGXpEx91r3agp8rxEKHesh7BHaj03GpW+NrkA5QSg70ztdLFhtCddFxQR0oSujnqyyHCdCp41fo0GwNo/Zbv/PUbjYrlr/3qGBLNojV33mDd0OlXhr4082UxRNjYwDuiN+IUTWgMF85Dk1gKWc2Ta1bles9eJbLW74Fk9ClsUdQilLicZy+vzERvEgkcpE7v3rkGNDRwoRs5+sAByFN03dTiDcY4QaEUFMkn0QeO2hi/RmIvsPZZTd bzs@Zsolt001"
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDJHgr3j1KQt+iZn0UhXh/K5pFnIXo44D2CoL8fEiXGMEtqDO4LSxqqOkhKMVadSyYnIpVqRSfp+NDW+0OZCWN+o03kBQkqI6FfMb423lzNCjL9Zpqb8X5h1rlk7O2ksuOkmo9R8p/rQvhVxhqGVMZfSMNB5DyikFqH7zockw9M/CB18AIlCgqgCLRX0NmkBy+9AHuXQI1RyRw/K2Q5ZU89F0ZdRHe6eR9/FnwWXO3wqmW5fZ0+YsYv6K3h2HVHCqm1tgFiXUe4jjcsfxjI/HOz+1jjZlgBfuasq7sWkFmkSFZKhHc9uy7+vyGDD9jWiWNqD+t4Oota6CevGMQMhR8GR8FwLcqVPnrVWpgEjvQWkeL6i/u867SmGW8B9uOAvkJaHKIHJVgza95DIDsyq6JjeWfv3UAKSrPc8VpVz5GyV8TmbaZiWPYpSHUJ3GDpiU/F9n2pggY+/PfERm50u20/CwoFgb3+pTOtQL7xicdIHVcMMUMntyChczDX1d2oSwU= dbzs@Zsolt001"
+
+packages:
+  - ansible
+  - curl
+  - net-tools
+package_update: true
+package_upgrade: true
