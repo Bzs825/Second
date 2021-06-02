@@ -3,7 +3,7 @@ groups:
   - admin
 
 users:
-  - name: ansible
+  - name: Bzs
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: admin
     ssh_import_id: None

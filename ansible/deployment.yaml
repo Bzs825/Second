@@ -1,0 +1,33 @@
+---
+- hosts: multipass
+  become: true
+
+  tasks:
+  - name: Create ansible directory
+    file:
+      path: /home/{{ ansible_user }}/ansible
+      state: directory
+
+  - name: Copy deployment file
+    copy:
+      src: /mnt/c/users/bzs/workspace/ansible/httpd-deploy.yaml
+      dest: /home/{{ ansible_user }}/ansible/httpd-deploy.yaml
+
+  - name: Copy service file
+    copy:
+      src: /mnt/c/users/bzs/workspace/ansible/httpd-service.yaml
+      dest: /home/{{ ansible_user }}/ansible/httpd-service.yaml
+
+  - name: Copy index.html file
+    copy:
+      src: /mnt/c/users/bzs/workspace/ansible/index.html
+      dest: /home/{{ ansible_user }}/ansible/index.html
+
+  - name: Configfile
+    shell: microk8s kubectl create configmap index.html --from-file=index.html
+
+  - name: Deployment
+    shell: microk8s kubectl apply -f /home/{{ ansible_user }}/ansible/httpd-deploy.yaml
+
+  - name: Exposing service
+    shell: microk8s kubectl apply -f /home/{{ ansible_user }}/ansible/httpd-service.yaml

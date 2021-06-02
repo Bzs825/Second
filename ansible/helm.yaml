@@ -1,0 +1,44 @@
+---
+- hosts: multipass
+
+  vars:
+    helm_chart_url: "https://charts.bitnami.com/bitnami"
+    helm_chart_url_2: "https://charts.helm.sh/stable"
+
+  tasks:
+  - name: Install Helm
+    snap:
+      name: helm
+      classic: yes
+      channel: latest/stable
+
+  - name: Add bitnami repo
+    become_user: ansible
+    kubernetes.core.helm_repository:
+      name: bitnami
+      repo_url: "{{ helm_chart_url }}"
+
+  - name: Add stable repo
+    become_user: ansible
+    kubernetes.core.helm_repository:
+      name: stable
+      repo_url: "{{ helm_chart_url_2 }}"
+
+  - name: Create directory for Apache
+    become: yes
+    file:
+      path: /home/{{ ansible_user }}/ansible/web
+      state: directory
+
+  - name: Copy index2.html file
+    copy:
+      src: /mnt/c/users/bzs/workspace/ansible/index2.html
+      dest: /home/{{ ansible_user }}/ansible/web/index.html
+    become: yes
+
+  - name: Add index.html to ConfigMap
+    shell: microk8s kubectl create configmap apache --from-file=/home/{{ ansible_user }}/ansible/web/index.html
+    become: yes
+
+  - name: Install Apache server
+    shell: helm install test bitnami/apache --set service.type=NodePort --set htdocsConfigMap=apache

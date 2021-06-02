@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: apache
+  name: mk8s-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apache
+  template:
+    metadata:
+      labels:
+        app: apache
+    spec:
+      containers:
+      - image: httpd:latest
+        name: apache-server
+        ports:
+        - containerPort: 80
+          name: apache
+        volumeMounts:
+        - name: htmlcontent
+          mountPath: "/usr/local/apache2/htdocs/"
+          readOnly: true
+      volumes:
+      - name: htmlcontent
+        configMap:
+          name: static-site
+          items:
+          - key: index.html
+            path: index.html

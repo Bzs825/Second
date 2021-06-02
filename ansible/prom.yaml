@@ -1,0 +1,138 @@
+---
+- hosts: multipass
+  vars_files:
+    - \default\main.yaml
+
+  tasks:
+# sudo groupadd --system prometheus
+  - name: Create prometheus user group
+    group:
+      name: prometheus
+      state: present
+
+# sudo useradd -s /sbin/nologin --system -g prometheus prometheus
+  - name: Create user for prometheus service
+    user:
+      name: prometheus
+      shell: /sbin/nologin
+      system: true
+      state: present
+
+# sudo mkdir /var/lib/prometheus
+  - name: Create /var/lib/prometheus
+    file:
+      path: /var/lib/prometheus
+      state: directory
+
+# for i in rules rules.d files_sd; do sudo mkdir -p /etc/prometheus/${i}; done
+  - name: Create /etc/prometheus/rules.d
+    file:
+      path: /etc/prometheus/rules.d
+      state: directory
+
+  - name: Create /etc/prometheus/files_sd
+    file:
+      path: /etc/prometheus/files_sd
+      state: directory
+
+# sudo apt update
+# sudo apt -y install wget curl
+  - name: Run the equivalent of "apt-get update" as a separate step
+    apt:
+      update_cache: true
+      cache_valid_time: 3600
+
+  - name: Install dependencies for Prometheus
+    apt:
+      name: ['wget', 'curl'] 
+      state: latest
+
+# mkdir -p /tmp/prometheus && cd /tmp/prometheus
+# curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep linux-amd64 | cut -d '"' -f 4 | wget -qi -
+  - name: "Create {{ prometheus_staging_directory }}"
+    file:
+      path: "{{ prometheus_staging_directory }}"
+      state: directory
+
+  - name: Download prometheus tar
+    shell: curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep linux-amd64 | cut -d '"' -f 4 | wget -qi -
+    args:
+      chdir: "{{ prometheus_staging_directory }}"
+
+  - name: Register tar path (can be left out when no dev env - precise package name!)
+    find: paths="{{ prometheus_staging_directory }}" patterns="prometheus*.tar.gz"
+    register: prometheus_tar_location
+
+  - name: Unzip prometheus tar
+    unarchive: src="{{ item.path }}" remote_src=yes dest="{{ prometheus_staging_directory }}"
+    with_items: "{{ prometheus_tar_location.files }}"
+
+# tar xvf prometheus*.tar.gz
+# cd prometheus*/
+# sudo mv prometheus promtool /usr/local/bin/
+  - name: Move prometheus binaries to their desired location 
+    shell: 'mv "{{ prometheus_staging_directory }}"/prometheus*.linux-amd64/prometheus "{{ prometheus_staging_directory }}"/prometheus*.linux-amd64/promtool /usr/local/bin/'
+
+# sudo mv consoles/ console_libraries/ /etc/prometheus/
+  - name: Create directories for prometheus functionalities
+    shell: 'mv "{{ prometheus_staging_directory }}"/prometheus*.linux-amd64/consoles/ "{{ prometheus_staging_directory }}"/prometheus*.linux-amd64/console_libraries/ /etc/prometheus/'
+
+# sudo vim /etc/prometheus/prometheus.yml
+############################################################################################################################################
+# -> HERE ADD BASIC CONF FOR MONITORING SRVRs maybe but better leave it as is, because it is a basic installation
+# vim /etc/systemd/system/prometheus.service ----->>>> COPY TO HOST
+  - name: Create prometheus systemd service
+    copy:
+      src: "{{ project_directory }}/applications/application_configs/prometheus.service"
+      dest: /etc/systemd/system/
+
+# for i in rules rules.d files_sd; do sudo chown -R prometheus:prometheus /etc/prometheus/${i}; done
+# for i in rules rules.d files_sd; do sudo chmod -R 775 /etc/prometheus/${i}; done
+# sudo chown -R prometheus:prometheus /var/lib/prometheus/
+  - name: Set ownership of prometheus directories /etc/prometheus # should be node at creation TODO!
+  # command: for i in rules rules.d files_sd; do chown -R prometheus:prometheus /etc/prometheus/${i}; done
+    file:
+      path: /etc/prometheus/files_sd
+      state: directory
+      owner: prometheus
+      group: prometheus
+      recurse: yes
+
+  - name: Set mode for prometheus directories /etc/prometheus # should be node at creation TODO!
+  # command: for i in rules rules.d files_sd; do chmod -R 775 /etc/prometheus/${i}; done
+    file:
+      path: /etc/prometheus/rules.d
+      state: directory
+      mode: '775'
+      recurse: yes
+
+  - name: Set ownership of prometheus directories /var/lib/prometheus # should be node at creation TODO!
+  # command: chown -R prometheus:prometheus /var/lib/prometheus/
+    file:
+      path: /var/lib/prometheus
+      state: directory
+      owner: prometheus
+      group: prometheus
+      recurse: yes      
+
+  - name: Move prometheus.yml to /etc/prometheus
+    copy:
+      src: "{{ project_directory }}/applications/application_configs/prometheus.yml"
+      dest: /etc/prometheus/
+
+# OK as root
+# - name: Set ownership and mode for prometheus.yml
+#   file:
+#     path: /etc/prometheus/prometheus.yml
+#     owner: prometheus
+#     group: prometheus
+#     mode: '775'
+# systemctl daemon-reload
+# systemctl start prometheus
+# sudo systemctl enable prometheus
+  - name: Start & enable Prometheus service
+    systemd:
+      daemon_reload: yes
+      state: started
+      name: prometheus
+      enabled: yes
