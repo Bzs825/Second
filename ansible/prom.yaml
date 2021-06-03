@@ -1,7 +1,8 @@
 ---
 - hosts: multipass
-  vars_files:
-    - \default\main.yaml
+  become: yes
+  vars:
+    prometheus_staging_directory: "/home/{{ ansible_user }}/ansible/temp"
 
   tasks:
 # sudo groupadd --system prometheus
@@ -67,6 +68,7 @@
     unarchive: src="{{ item.path }}" remote_src=yes dest="{{ prometheus_staging_directory }}"
     with_items: "{{ prometheus_tar_location.files }}"
 
+    
 # tar xvf prometheus*.tar.gz
 # cd prometheus*/
 # sudo mv prometheus promtool /usr/local/bin/
@@ -77,20 +79,12 @@
   - name: Create directories for prometheus functionalities
     shell: 'mv "{{ prometheus_staging_directory }}"/prometheus*.linux-amd64/consoles/ "{{ prometheus_staging_directory }}"/prometheus*.linux-amd64/console_libraries/ /etc/prometheus/'
 
-# sudo vim /etc/prometheus/prometheus.yml
-############################################################################################################################################
-# -> HERE ADD BASIC CONF FOR MONITORING SRVRs maybe but better leave it as is, because it is a basic installation
-# vim /etc/systemd/system/prometheus.service ----->>>> COPY TO HOST
   - name: Create prometheus systemd service
     copy:
-      src: "{{ project_directory }}/applications/application_configs/prometheus.service"
+      src: /mnt/c/users/bzs/workspace/ansible/prometheus.service
       dest: /etc/systemd/system/
 
-# for i in rules rules.d files_sd; do sudo chown -R prometheus:prometheus /etc/prometheus/${i}; done
-# for i in rules rules.d files_sd; do sudo chmod -R 775 /etc/prometheus/${i}; done
-# sudo chown -R prometheus:prometheus /var/lib/prometheus/
-  - name: Set ownership of prometheus directories /etc/prometheus # should be node at creation TODO!
-  # command: for i in rules rules.d files_sd; do chown -R prometheus:prometheus /etc/prometheus/${i}; done
+  - name: Set ownership of prometheus directories /etc/prometheus
     file:
       path: /etc/prometheus/files_sd
       state: directory
@@ -98,41 +92,30 @@
       group: prometheus
       recurse: yes
 
-  - name: Set mode for prometheus directories /etc/prometheus # should be node at creation TODO!
-  # command: for i in rules rules.d files_sd; do chmod -R 775 /etc/prometheus/${i}; done
+  - name: Set mode for prometheus directories /etc/prometheus
     file:
       path: /etc/prometheus/rules.d
       state: directory
       mode: '775'
       recurse: yes
 
-  - name: Set ownership of prometheus directories /var/lib/prometheus # should be node at creation TODO!
-  # command: chown -R prometheus:prometheus /var/lib/prometheus/
+  - name: Set ownership of prometheus directories /var/lib/prometheus
     file:
       path: /var/lib/prometheus
       state: directory
       owner: prometheus
       group: prometheus
-      recurse: yes      
+      recurse: yes  
 
   - name: Move prometheus.yml to /etc/prometheus
     copy:
-      src: "{{ project_directory }}/applications/application_configs/prometheus.yml"
+      src: /mnt/c/users/bzs/workspace/ansible/prometheus.yml
       dest: /etc/prometheus/
 
-# OK as root
-# - name: Set ownership and mode for prometheus.yml
-#   file:
-#     path: /etc/prometheus/prometheus.yml
-#     owner: prometheus
-#     group: prometheus
-#     mode: '775'
-# systemctl daemon-reload
-# systemctl start prometheus
-# sudo systemctl enable prometheus
   - name: Start & enable Prometheus service
     systemd:
       daemon_reload: yes
       state: started
       name: prometheus
       enabled: yes
+
