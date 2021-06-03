@@ -1,0 +1,57 @@
+---
+- hosts: multipass
+  become: yes
+  
+  tasks:
+  - name: Get&Add apt-key
+    shell: 'wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -'
+
+  - name: Add repository 
+    shell: 'add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"'
+
+  - name: Run the equivalent of "apt-get update" as a separate step
+    apt:
+      update_cache: true
+
+  - name: Install Grafana
+    apt:
+      name: grafana
+      state: latest
+
+  - name: Enable dashboard provisioning
+    copy: 
+      src: /mnt/c/users/bzs/workspace/ansible/db_provisioning.yml
+      dest: /etc/grafana/provisioning/dashboards
+      owner: root
+      group: grafana
+
+  - name: Provision grafana datasources
+    copy:
+      src: "{{ item }}"
+      dest: /etc/grafana/provisioning/datasources
+      owner: root
+      group: grafana    
+    with_fileglob:
+      - /mnt/c/users/bzs/workspace/ansible/ds_prometheus.yml
+
+  - name: Create /var/lib/grafana/dashboards directory for dashboards
+    file:
+      path: /var/lib/grafana/dashboards
+      owner: root
+      group: grafana
+      state: directory
+
+  - name: Provision grafana dashboards
+    copy:
+      src: "{{ item }}"
+      dest: /var/lib/grafana/dashboards
+      owner: root
+      group: grafana        
+    with_fileglob:
+      - "/mnt/c/users/bzs/workspace/ansible/dashboard/*"
+
+  - name: Start grafana-server
+    systemd:
+      state: started
+      name: grafana-server
+      enabled: yes
