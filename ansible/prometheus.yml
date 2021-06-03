@@ -23,3 +23,7 @@ scrape_configs:
   - job_name: 'multipass'
     static_configs:
     - targets: ['localhost:9090']
+
+  - job_name: microk8s
+    static_configs:
+    - targets: ['localhost:9091']

@@ -1,0 +1,39 @@
+---
+- hosts: multipass
+  become: yes
+  vars:
+    node_exporter_staging_directory: "/home/{{ ansible_user }}/ansible/temp/node_exporter"
+
+  tasks:
+  - name: Create staging directory "{{ node_exporter_staging_directory }}"
+    file:
+      path: "{{ node_exporter_staging_directory }}"
+      state: directory
+
+  - name: Download node_exporter to staging directory
+    shell: curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep browser_download_url | grep linux-amd64 |  cut -d '"' -f 4 | wget -qi -
+    args:
+      chdir: "{{ node_exporter_staging_directory }}"
+
+  - name: Register tar path (can be left out when no dev env - precise package name!) 
+    find: paths="{{ node_exporter_staging_directory }}" patterns="node_exporter*.tar.gz"
+    register: node_exporter_tar_location
+
+  - name: Unarcvhive node_exporter installer tar
+    unarchive: src="{{ item.path }}" remote_src=yes dest="{{ node_exporter_staging_directory }}"
+    with_items: "{{ node_exporter_tar_location.files }}"
+
+  - name: Move node_exporter binaries to their desired location 
+    shell: 'mv "{{ node_exporter_staging_directory }}"/node_exporter*.linux-amd64/node_exporter /usr/local/bin/'
+
+  - name: Create service for node_exporter 
+    copy:
+      src: /mnt/c/users/bzs/workspace/ansible/node_exporter.service
+      dest: /etc/systemd/system/
+
+  - name: Start & enable node_exporter service
+    systemd:
+      daemon_reload: yes
+      state: started
+      name: node_exporter
+      enabled: yes
