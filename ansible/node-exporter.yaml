@@ -15,16 +15,23 @@
     args:
       chdir: "{{ node_exporter_staging_directory }}"
 
-  - name: Register tar path (can be left out when no dev env - precise package name!) 
-    find: paths="{{ node_exporter_staging_directory }}" patterns="node_exporter*.tar.gz"
-    register: node_exporter_tar_location
+
+# - name: Register tar path (can be left out when no dev env - precise package name!) 
+#    find: paths="{{ node_exporter_staging_directory }}" patterns="node_exporter*.tar.gz"
+#    register: node_exporter_tar_location
 
   - name: Unarcvhive node_exporter installer tar
-    unarchive: src="{{ item.path }}" remote_src=yes dest="{{ node_exporter_staging_directory }}"
-    with_items: "{{ node_exporter_tar_location.files }}"
+    unarchive: 
+      src: "{{ node_exporter_staging_directory }}"
+      remote_src: yes
+      dest: "{{ node_exporter_staging_directory }}"
 
   - name: Move node_exporter binaries to their desired location 
-    shell: 'mv "{{ node_exporter_staging_directory }}"/node_exporter*.linux-amd64/node_exporter /usr/local/bin/'
+    become: yes
+    copy:
+      src: "{{ node_exporter_staging_directory }}/node_exporter*.linux-amd64/node_exporter"
+      dest: /usr/local/bin/node_exporter
+      remote_src: yes
 
   - name: Create service for node_exporter 
     copy:

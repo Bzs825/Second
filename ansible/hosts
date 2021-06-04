@@ -1,2 +1,2 @@
 [multipass]
-172.20.66.203    ansible_connection=ssh    ansible_user=Bzs
+172.20.76.122    ansible_connection=ssh    ansible_user=Bzs
