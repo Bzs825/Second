@@ -48,6 +48,9 @@
       name: ['wget', 'curl'] 
       state: latest
 
+  - name: Enable Microk8s addons
+    shell: microk8s enable prometheus dns dashboard
+
 # mkdir -p /tmp/prometheus && cd /tmp/prometheus
 # curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep linux-amd64 | cut -d '"' -f 4 | wget -qi -
   - name: "Create {{ prometheus_staging_directory }}"
