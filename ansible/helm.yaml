@@ -6,11 +6,27 @@
     helm_chart_url_2: "https://charts.helm.sh/stable"
 
   tasks:
+  - name: Add apt-key for helm
+    shell: curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+
+  - name: Install apt-transport-https
+    become: yes
+    apt:
+      name: apt-transport-https
+      update_cache: yes
+
+  - name: Write list file
+    command: echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+
+  - name: Update cache
+    become: yes
+    apt:
+      update_cache: yes
+
   - name: Install Helm
-    snap:
+    become: yes
+    apt:
       name: helm
-      classic: yes
-      channel: latest/stable
 
   - name: Add bitnami repo
     become_user: ansible

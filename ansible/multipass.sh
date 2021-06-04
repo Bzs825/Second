@@ -19,3 +19,5 @@ ansible-playbook prom.yaml -i hosts
 
 ansible-playbook node-exporter.yaml -i hosts
 
+ansible-playbook grafana.yaml -i hosts
+
