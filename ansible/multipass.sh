@@ -9,8 +9,13 @@ INSTANCE_IP=${INSTANCE_IP//$'\r'/}
 echo -e "[multipass]" >hosts
 echo -e "$INSTANCE_IP    ansible_connection=ssh    ansible_user=$USER_NAME" >>hosts
 
-#ansible-playbook mk8s.yaml -i hosts
+ansible-playbook mk8s.yaml -i hosts
 
-#ansible-playbook deployment.yaml -i hosts
+ansible-playbook deployment.yaml -i hosts
 
-#ansible-playbook helm.yaml -i hosts
+ansible-playbook helm.yaml -i hosts
+
+ansible-playbook prom.yaml -i hosts
+
+ansible-playbook node-exporter.yaml -i hosts
+
