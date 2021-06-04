@@ -30,9 +30,9 @@
       src: "{{ item }}"
       dest: /etc/grafana/provisioning/datasources
       owner: root
-      group: grafana    
+      group: grafana
     with_fileglob:
-      - /mnt/c/users/bzs/workspace/ansible/ds_prometheus.yml
+      - "/mnt/c/users/bzs/workspace/ansible/datasource/*"
 
   - name: Create /var/lib/grafana/dashboards directory for dashboards
     file:
@@ -46,7 +46,7 @@
       src: "{{ item }}"
       dest: /var/lib/grafana/dashboards
       owner: root
-      group: grafana        
+      group: grafana
     with_fileglob:
       - "/mnt/c/users/bzs/workspace/ansible/dashboard/*"
 
